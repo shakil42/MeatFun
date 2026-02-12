@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production LOG - SHAGOR Meat Track</title>
+    <link rel="stylesheet" href="productionlog.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar no-print">
+        <div class="nav-logo">SHAGOR Meat Track</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="production-log.html" class="active">Production LOG</a></li>
+            <li><a href="reports.html">Reports</a></li>
+        </ul>
+    </nav>
+
+    <div class="main-content">
+        <header class="page-header">
+            <div class="header-flex">
+                <div>
+                    <h1>Daily Production LOG</h1>
+                    <p class="no-print">Categorize items to update Beef & Chicken reports.</p>
+                </div>
+                <div class="top-actions no-print">
+                    <button class="export-btn" onclick="exportToCSV()">
+                        <span class="material-icons">download</span> CSV
+                    </button>
+                    <button class="print-btn" onclick="window.print()">
+                        <span class="material-icons">print</span> Print
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <div class="table-wrapper">
+            <table id="logTable">
+                <thead>
+                    <tr>
+                        <th class="col-v"><div class="v-text">Date</div></th>
+                        <th class="col-v"><div class="v-text">Batch No.</div></th>
+                        <th class="col-h">Category</th>
+                        <th class="col-h">Product Item</th>
+                        <th class="col-v"><div class="v-text">Raw Weight</div></th>
+                        <th class="col-v"><div class="v-text">Post Brine</div></th>
+                        <th class="col-v"><div class="v-text">Post Tumble</div></th>
+                        <th class="col-v"><div class="v-text">Cooked Bagged</div></th>
+                        <th class="col-v"><div class="v-text">Used/Open Bag</div></th>
+                        <th class="col-action no-print">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="table-footer no-print">
+            <button class="save-btn" onclick="saveData()">
+                <span class="material-icons">save</span> Save Data
+            </button>
+            <button class="add-btn" onclick="addRow()">
+                <span class="material-icons">add</span> Add Row
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const productData = {
+            "Chicken": ["Burrito", "Drumstick", "Breast"],
+            "Beef": ["Beef Strip", "Beef Eye Round"]
+        };
+
+        function addRow() {
+            const tbody = document.getElementById("tableBody");
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td><input type="date" class="d-date"></td>
+                <td><input type="text" class="d-batch"></td>
+                <td>
+                    <select class="cat-select" onchange="updateProductList(this)">
+                        <option value="">-Select-</option>
+                        <option value="Chicken">Chicken</option>
+                        <option value="Beef">Beef</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="prod-select" disabled><option value="">-Item-</option></select>
+                </td>
+                <td><input type="number" step="0.01" class="d-raw"></td>
+                <td><input type="number" step="0.01" class="d-brine"></td>
+                <td><input type="number" step="0.01" class="d-tumble"></td>
+                <td><input type="number" step="0.01" class="d-cooked"></td>
+                <td><input type="number" step="0.01" class="d-sliced"></td>
+                <td class="delete-cell no-print">
+                    <button class="delete-btn" onclick="this.parentElement.parentElement.remove()">
+                        <span class="material-icons">delete</span>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        function updateProductList(catDropdown) {
+            const row = catDropdown.closest('tr');
+            const prodDropdown = row.querySelector('.prod-select');
+            const category = catDropdown.value;
+            prodDropdown.innerHTML = '<option value="">-Item-</option>';
+            if (category && productData[category]) {
+                prodDropdown.disabled = false;
+                productData[category].forEach(item => {
+                    let opt = document.createElement("option");
+                    opt.value = item; opt.innerHTML = item;
+                    prodDropdown.appendChild(opt);
+                });
+            } else { prodDropdown.disabled = true; }
+        }
+
+        function saveData() {
+    const rows = document.querySelectorAll("#tableBody tr");
+    let allReports = JSON.parse(localStorage.getItem("shagor_meat_reports")) || { "Chicken": [], "Beef": [], "Rice": [] };
+
+    rows.forEach(row => {
+        const cat = row.querySelector(".cat-select").value;
+        const prod = row.querySelector(".prod-select").value;
+        
+        if (cat && prod) {
+            allReports[cat].push({
+                date: row.cells[0].querySelector('input').value,
+                batch: row.cells[1].querySelector('input').value,
+                product: prod,
+                raw: row.cells[4].querySelector('input').value || 0,
+                cooked: row.cells[7].querySelector('input').value || 0, // Cooked Bagged
+                openBag: row.cells[8].querySelector('input').value || 0 // Open Bag / Sliced
+            });
+        }
+    });
+
+    localStorage.setItem("shagor_meat_reports", JSON.stringify(allReports));
+    alert("Inventory Updated!");
+}
+
+        function exportToCSV() {
+            const rows = document.querySelectorAll("#tableBody tr");
+            let csv = "Date,Batch,Category,Product,Raw,Brine,Tumble,Cooked,Sliced\n";
+            rows.forEach(row => {
+                const rowData = Array.from(row.querySelectorAll("input, select")).map(i => i.value);
+                csv += rowData.join(",") + "\n";
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'production_log.csv'; a.click();
+        }
+
+        window.onload = () => { for(let i=0; i<5; i++) addRow(); };
+    </script>
+
+    
+</body>
+</html>

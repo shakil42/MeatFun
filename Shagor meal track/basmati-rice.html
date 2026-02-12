@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basmati Smart Planner - SHAGOR</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .calc-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 40px auto;
+        }
+        .main-input {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .main-input label { display: block; margin-bottom: 10px; font-weight: bold; color: #0f172a; font-size: 1.1rem; }
+        .main-input input { 
+            width: 80%; padding: 15px; border: 3px solid #10b981; border-radius: 50px; 
+            font-size: 24px; text-align: center; outline: none; font-weight: bold;
+        }
+        .allocation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .container-box {
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            padding: 15px; border-radius: 10px; text-align: center;
+        }
+        .container-box h3 { font-size: 0.9rem; color: #64748b; margin-bottom: 5px; }
+        .count { font-size: 2rem; font-weight: bold; color: #1e293b; }
+        
+        .summary-panel {
+            background: #0f172a; color: white;
+            padding: 20px; border-radius: 12px; margin-top: 10px;
+        }
+        .summary-line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #334155; }
+        .summary-line:last-child { border-bottom: none; }
+        .val { font-weight: bold; color: #10b981; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo">SHAGOR Meat Track</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="production-log.html">Production LOG</a></li>
+        </ul>
+    </nav>
+
+    <div class="main-content">
+        <div class="calc-card">
+            <div class="main-input">
+                <label>Total Raw Rice Needed (KG)</label>
+                <input type="number" id="targetRice" placeholder="0" oninput="smartCalculate()">
+            </div>
+
+            <h3 style="margin-bottom:15px; font-size:1rem; color:#1e293b;">Container Allocation:</h3>
+            <div class="allocation-grid">
+                <div class="container-box">
+                    <h3>Medium (3kg)</h3>
+                    <div class="count" id="medCount">0</div>
+                </div>
+                <div class="container-box">
+                    <h3>Small (2kg)</h3>
+                    <div class="count" id="smallCount">0</div>
+                </div>
+            </div>
+
+            <div class="summary-panel">
+                <div class="summary-line">
+                    <span>Total Water Needed (1.2L/kg):</span>
+                    <span class="val" id="totalWater">0 L</span>
+                </div>
+                <div class="summary-line">
+                    <span>Estimated Cooked Yield:</span>
+                    <span class="val" id="totalCooked">0 kg</span>
+                </div>
+            </div>
+
+            <div id="leftoverWarning" style="margin-top:15px; color:#ef4444; font-weight:bold; display:none; text-align:center;">
+                <span class="material-icons" style="vertical-align: middle;">warning</span> 
+                Remaining Rice: <span id="leftoverVal">0</span>kg (Manual Handling)
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function smartCalculate() {
+            let target = parseFloat(document.getElementById('targetRice').value) || 0;
+            
+            // Logic: Fill 3kg containers first
+            let medium = Math.floor(target / 3);
+            let remainder = target % 3;
+            
+            // Logic: Use 2kg containers for the remainder
+            let small = Math.floor(remainder / 2);
+            let finalLeftover = remainder % 2;
+
+            // Update UI
+            document.getElementById('medCount').innerText = medium;
+            document.getElementById('smallCount').innerText = small;
+            
+            // Totals
+            const totalWater = target * 1.2;
+            const cookedMin = target * 2.4;
+            const cookedMax = target * 2.5;
+
+            document.getElementById('totalWater').innerText = totalWater.toFixed(1) + " L";
+            document.getElementById('totalCooked').innerText = cookedMin.toFixed(1) + " - " + cookedMax.toFixed(1) + " kg";
+
+            // Warning for odd numbers (like 1kg) that don't fit 2kg or 3kg containers
+            const warning = document.getElementById('leftoverWarning');
+            if (finalLeftover > 0 && target > 0) {
+                warning.style.display = "block";
+                document.getElementById('leftoverVal').innerText = finalLeftover.toFixed(1);
+            } else {
+                warning.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html>

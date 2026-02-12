@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Reports - SHAGOR</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .report-container { padding: 30px; max-width: 1200px; margin: auto; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border-top: 5px solid #10b981; }
+        .stat-card h3 { color: #64748b; font-size: 0.9rem; margin-bottom: 10px; }
+        .stat-card .value { font-size: 1.8rem; font-weight: bold; color: #0f172a; }
+        
+        .report-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .report-table th { background: #f8fafc; padding: 15px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #475569; font-size: 13px; }
+        .report-table td { padding: 12px 15px; border-bottom: 1px solid #f1f5f9; color: #1e293b; font-size: 14px; }
+        
+        .filter-bar { background: white; padding: 20px; border-radius: 12px; display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+        .filter-group select { padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; }
+
+        /* Action Buttons Styling */
+        .btn-clear { 
+            background: #ef4444; color: white; border: none; padding: 10px 20px; 
+            border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;
+            transition: all 0.3s ease;
+        }
+        .action-btn { background: none; border: none; cursor: pointer; padding: 4px; border-radius: 4px; transition: 0.2s; }
+        .action-btn:hover { background: #f1f5f9; }
+        .edit-icon { color: #3b82f6; }
+        .delete-icon { color: #ef4444; }
+        
+        .batch-badge { font-weight: bold; color: #0f172a; display: flex; align-items: center; gap: 4px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo">SHAGOR Meat Track</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="production-log.html">Production LOG</a></li>
+            <li><a href="reports.html" class="active">Reports</a></li>
+        </ul>
+    </nav>
+
+    <div class="report-container">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h1>Inventory Stock Report</h1>
+            <button id="clearAllBtn" class="btn-clear" onclick="handleClearAll()">
+                <span class="material-icons">delete_sweep</span> Clear All Reports
+            </button>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Production (Cooked)</h3>
+                <div class="value" id="statCooked">0 kg</div>
+            </div>
+            <div class="stat-card" style="border-top-color: #ef4444;">
+                <h3>Total Used (Open Bag)</h3>
+                <div class="value" id="statUsed" style="color:#ef4444;">0 kg</div>
+            </div>
+            <div class="stat-card" style="border-top-color: #3b82f6;">
+                <h3>Current Stock Available</h3>
+                <div class="value" id="statNet" style="color:#3b82f6;">0 kg</div>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-group">
+                <select id="filterCat" onchange="updateItemDropdown()">
+                    <option value="All">All Categories</option>
+                    <option value="Chicken">Chicken</option>
+                    <option value="Beef">Beef</option>
+                    <option value="Rice">Rice</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <select id="filterItem" onchange="loadReportData()">
+                    <option value="All">All Items</option>
+                </select>
+            </div>
+        </div>
+
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Batch</th>
+                    <th>Product</th>
+                    <th>Raw Weight</th>
+                    <th>Cooked Weight</th>
+                    <th>Open Bag (Used)</th>
+                    <th>Balance</th>
+                    <th style="text-align:center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="reportItems"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const products = {
+            "Chicken": ["Burrito", "Drumstick", "Breast"],
+            "Beef": ["Beef Strip", "Beef Eye Round"],
+            "Rice": ["Basmati Rice", "Low Carb Rice"]
+        };
+
+        let clearStage = 0;
+        function handleClearAll() {
+            const btn = document.getElementById('clearAllBtn');
+            if (clearStage === 0) {
+                clearStage = 1;
+                btn.style.background = "#b91c1c";
+                btn.innerHTML = `<span class="material-icons">warning</span> CLICK AGAIN TO CONFIRM`;
+                setTimeout(() => {
+                    clearStage = 0;
+                    btn.style.background = "#ef4444";
+                    btn.innerHTML = `<span class="material-icons">delete_sweep</span> Clear All Reports`;
+                }, 3000);
+            } else {
+                if(confirm("FINAL CHECK: This will permanently delete ALL saved records. Are you sure?")) {
+                    localStorage.removeItem("shagor_meat_reports");
+                    loadReportData();
+                    alert("Reports cleared successfully.");
+                }
+                clearStage = 0;
+                btn.style.background = "#ef4444";
+                btn.innerHTML = `<span class="material-icons">delete_sweep</span> Clear All Reports`;
+            }
+        }
+
+        function deleteRecord(cat, batch) {
+            if(confirm(`Delete all records for Batch: ${batch}?`)) {
+                const data = JSON.parse(localStorage.getItem("shagor_meat_reports"));
+                // Remove all entries matching this batch in this category
+                data[cat] = data[cat].filter(entry => entry.batch !== batch);
+                localStorage.setItem("shagor_meat_reports", JSON.stringify(data));
+                loadReportData();
+            }
+        }
+
+        function editRecord(cat, batch) {
+            alert("To edit specific weights in a consolidated batch, please update the Production Log entries for this Batch ID.");
+        }
+
+        function updateItemDropdown() {
+            const cat = document.getElementById('filterCat').value;
+            const itemSelect = document.getElementById('filterItem');
+            itemSelect.innerHTML = '<option value="All">All Items</option>';
+            if (cat !== "All" && products[cat]) {
+                products[cat].forEach(p => itemSelect.innerHTML += `<option value="${p}">${p}</option>`);
+            }
+            loadReportData();
+        }
+
+        function loadReportData() {
+            const data = JSON.parse(localStorage.getItem("shagor_meat_reports")) || { "Chicken": [], "Beef": [], "Rice": [] };
+            const selectedCat = document.getElementById('filterCat').value;
+            const selectedItem = document.getElementById('filterItem').value;
+            const tbody = document.getElementById('reportItems');
+            
+            tbody.innerHTML = "";
+            let totalProduced = 0;
+            let totalUsed = 0;
+
+            // Grouping Logic for Same Batch + Same Category
+            const consolidated = {};
+
+            Object.keys(data).forEach(cat => {
+                if (selectedCat === "All" || selectedCat === cat) {
+                    data[cat].forEach((entry) => {
+                        if (selectedItem === "All" || selectedItem === entry.product) {
+                            
+                            // Key based on Category + Batch (case-insensitive)
+                            const groupKey = `${cat}-${entry.batch}`.toLowerCase().trim();
+
+                            if (!consolidated[groupKey]) {
+                                consolidated[groupKey] = {
+                                    date: entry.date,
+                                    batch: entry.batch,
+                                    product: entry.product,
+                                    raw: parseFloat(entry.raw) || 0,
+                                    cooked: parseFloat(entry.cooked) || 0,
+                                    openBag: parseFloat(entry.openBag) || 0,
+                                    cat: cat,
+                                    count: 1
+                                };
+                            } else {
+                                consolidated[groupKey].raw += parseFloat(entry.raw) || 0;
+                                consolidated[groupKey].cooked += parseFloat(entry.cooked) || 0;
+                                consolidated[groupKey].openBag += parseFloat(entry.openBag) || 0;
+                                consolidated[groupKey].count += 1;
+                            }
+                        }
+                    });
+                }
+            });
+
+            // Display consolidated results
+            Object.values(consolidated).forEach(group => {
+                const produced = group.cooked;
+                const used = group.openBag;
+                const balance = produced - used;
+
+                totalProduced += produced;
+                totalUsed += used;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${group.date}</td>
+                        <td>
+                            <div class="batch-badge">
+                                ${group.batch}
+                                ${group.count > 1 ? '<span class="material-icons" style="font-size:16px;color:#10b981">layers</span>' : ''}
+                            </div>
+                        </td>
+                        <td>${group.product}</td>
+                        <td>${group.raw.toFixed(2)} kg</td>
+                        <td style="color:green">+${produced.toFixed(2)} kg</td>
+                        <td style="color:red">-${used.toFixed(2)} kg</td>
+                        <td style="font-weight:bold; background: ${balance < 0 ? '#fee2e2' : 'transparent'}">
+                            ${balance.toFixed(2)} kg
+                        </td>
+                        <td style="text-align:center;">
+                            <button class="action-btn edit-icon" onclick="editRecord('${group.cat}', '${group.batch}')" title="Edit via Log">
+                                <span class="material-icons">info</span>
+                            </button>
+                            <button class="action-btn delete-icon" onclick="deleteRecord('${group.cat}', '${group.batch}')" title="Delete Batch">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('statCooked').innerText = totalProduced.toFixed(1) + " kg";
+            document.getElementById('statUsed').innerText = totalUsed.toFixed(1) + " kg";
+            document.getElementById('statNet').innerText = (totalProduced - totalUsed).toFixed(1) + " kg";
+        }
+
+        window.onload = loadReportData;
+    </script>
+</body>
+</html>

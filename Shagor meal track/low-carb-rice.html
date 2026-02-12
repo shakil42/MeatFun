@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Low Carb Rice Planner - SHAGOR</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .calc-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 40px auto;
+        }
+        .main-input { margin-bottom: 30px; text-align: center; }
+        .main-input label { display: block; margin-bottom: 10px; font-weight: bold; color: #0f172a; font-size: 1.1rem; }
+        .main-input input { 
+            width: 80%; padding: 15px; border: 3px solid #3b82f6; border-radius: 50px; 
+            font-size: 24px; text-align: center; outline: none; font-weight: bold;
+        }
+        .allocation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .container-box {
+            background: #f0f9ff; border: 1px solid #bae6fd;
+            padding: 15px; border-radius: 10px; text-align: center;
+        }
+        .container-box h3 { font-size: 0.9rem; color: #0369a1; margin-bottom: 5px; }
+        .count { font-size: 2rem; font-weight: bold; color: #0c4a6e; }
+        
+        .summary-panel {
+            background: #0c4a6e; color: white;
+            padding: 20px; border-radius: 12px;
+        }
+        .summary-line { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #075985; }
+        .summary-line:last-child { border-bottom: none; }
+        .val { font-weight: bold; color: #7dd3fc; }
+        .oil-text { color: #facc15 !important; } /* Gold color for oil */
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo"> <a href="index.html">SHAGOR Meat Track</a> </div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="production-log.html">Production LOG</a></li>
+        </ul>
+    </nav>
+
+    <div class="main-content">
+        <div class="calc-card">
+            <div class="main-input">
+                <label>Low Carb Rice Needed (KG)</label>
+                <input type="number" id="targetRice" placeholder="0" oninput="calculateLowCarb()">
+            </div>
+
+            <h3 style="margin-bottom:15px; font-size:1rem; color:#1e293b;">Container Allocation:</h3>
+            <div class="allocation-grid">
+                <div class="container-box">
+                    <h3>Medium (3kg)</h3>
+                    <div class="count" id="medCount">0</div>
+                </div>
+                <div class="container-box">
+                    <h3>Small (2kg)</h3>
+                    <div class="count" id="smallCount">0</div>
+                </div>
+            </div>
+
+            <div class="summary-panel">
+                <div class="summary-line">
+                    <span>Water Needed (1:1):</span>
+                    <span class="val" id="totalWater">0 L</span>
+                </div>
+                <div class="summary-line">
+                    <span>Vegetable Oil (1:1):</span>
+                    <span class="val oil-text" id="totalOil">0 L</span>
+                </div>
+                <div class="summary-line">
+                    <span>Total Batch Weight:</span>
+                    <span class="val" id="totalWeight">0 kg</span>
+                </div>
+            </div>
+            
+            <p style="margin-top:20px; font-size:12px; color:#64748b; text-align:center;">
+                Ratio: 1 Part Rice | 1 Part Water | 1 Part Oil
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function calculateLowCarb() {
+            let target = parseFloat(document.getElementById('targetRice').value) || 0;
+            
+            // Allocation Logic
+            let medium = Math.floor(target / 3);
+            let remainder = target % 3;
+            let small = Math.floor(remainder / 2);
+
+            document.getElementById('medCount').innerText = medium;
+            document.getElementById('smallCount').innerText = small;
+            
+            // 1:1:1 Ratio Logic
+            const totalWater = target; 
+            const totalOil = target;
+            const totalBatch = target + totalWater + totalOil;
+
+            document.getElementById('totalWater').innerText = totalWater.toFixed(1) + " L";
+            document.getElementById('totalOil').innerText = totalOil.toFixed(1) + " L";
+            document.getElementById('totalWeight').innerText = totalBatch.toFixed(1) + " kg";
+        }
+    </script>
+</body>
+</html>

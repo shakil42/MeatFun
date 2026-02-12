@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHAGOR Meat Track - Home</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <span class="material-icons">liquor</span> SHAGOR <span>Meat Track</span>
+            </div>
+            
+            <ul class="nav-links">
+                <li><a href="index.html" class="active">Home</a></li>
+                
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="drop-trigger">
+                        Chicken <span class="material-icons">expand_more</span>
+                    </a>
+                    <div class="dropdown-content">
+                        <a href="production-log.html">Drumstick</a>
+                        <a href="production-log.html">Burrito</a>
+                        <a href="production-log.html">Breast</a>
+                    </div>
+                </li>
+
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="drop-trigger">
+                        Beef <span class="material-icons">expand_more</span>
+                    </a>
+                    <div class="dropdown-content">
+                        <a href="production-log.html">Beef Strip</a>
+                        <a href="production-log.html">Beef Eye Round</a>
+                    </div>
+                </li>
+
+                <li class="dropdown">
+                    <a href="javascript:void(0)" class="drop-trigger">
+                        Rice <span class="material-icons">expand_more</span>
+                    </a>
+                    <div class="dropdown-content">
+                        <a href="basmati-rice.html">Basmati Rice</a>
+                        <a href="low-carb-rice.html">Low Carb Rice</a>
+                    </div>
+                </li>
+
+                <li><a href="reports.html">Reports</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <div class="hero-overlay">
+            <div class="welcome-card">
+                <span class="badge">v1.0 Live</span>
+                <h1>Precision Production Tracking</h1>
+                <p>Manage raw inputs, calculate batch ratios, and monitor real-time stock levels for the SHAGOR facility.</p>
+                
+                <div class="hero-actions">
+                    <a href="production-log.html" class="btn-primary">
+                        <span class="material-icons">add_task</span> New Production Entry
+                    </a>
+                    <a href="reports.html" class="btn-secondary">
+                        <span class="material-icons">assessment</span> View Stock
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Clicking logic to prevent overflow/hover issues on mobile
+        document.querySelectorAll('.drop-trigger').forEach(trigger => {
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const parent = this.parentElement;
+                document.querySelectorAll('.dropdown').forEach(d => {
+                    if (d !== parent) d.classList.remove('active');
+                });
+                parent.classList.toggle('active');
+            });
+        });
+
+        window.onclick = () => {
+            document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('active'));
+        };
+    </script>
+</body>
+</html>
