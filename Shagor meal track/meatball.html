@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meatball Dashboard - SHAGOR</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1; --primary-hover: #4f46e5;
+            --success: #10b981; --danger: #ef4444;
+            --dark: #0f172a; --slate: #64748b;
+            --bg: #f8fafc;
+        }
+
+        body { font-family: 'Inter', system-ui, sans-serif; background-color: var(--bg); margin: 0; color: #1e293b; transition: all 0.3s; }
+        
+        /* NAVBAR */
+        .navbar { background: var(--dark); color: white; padding: 0.8rem 2rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .nav-links { list-style: none; display: flex; gap: 20px; margin: 0; }
+        .nav-links a { color: #cbd5e1; text-decoration: none; font-size: 14px; transition: 0.2s; }
+        .nav-links a:hover { color: white; }
+        
+        .container { padding: 25px; max-width: 1500px; margin: auto; }
+
+        /* TOP DASHBOARD CONTROLS */
+        .admin-top-bar { 
+            background: white; padding: 20px; border-radius: 16px; 
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); 
+            display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 25px; 
+            border-top: 6px solid var(--primary); align-items: flex-end;
+        }
+
+        .control-group { 
+            padding: 15px; background: #fff; border-radius: 12px; 
+            border: 1px solid #e2e8f0; display: flex; gap: 15px; align-items: flex-end;
+            transition: 0.3s;
+        }
+        .control-group:hover { border-color: var(--primary); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+
+        .input-box { display: flex; flex-direction: column; gap: 6px; }
+        .input-box label { font-size: 11px; font-weight: 700; color: var(--slate); text-transform: uppercase; letter-spacing: 0.5px; }
+        .input-box input, .input-box select { 
+            padding: 10px; border: 1.5px solid #e2e8f0; border-radius: 8px; 
+            font-size: 14px; min-width: 130px; outline: none; transition: 0.2s;
+        }
+        .input-box input:focus { border-color: var(--primary); ring: 2px var(--primary); }
+
+        .btn { 
+            border: none; padding: 11px 18px; border-radius: 8px; font-weight: 600; 
+            cursor: pointer; display: flex; align-items: center; gap: 8px; 
+            font-size: 14px; transition: 0.2s; transform: translateY(0);
+        }
+        .btn:active { transform: translateY(2px); }
+        .btn-add { background: var(--primary); color: white; }
+        .btn-update { background: var(--success); color: white; }
+        .btn-print { background: var(--dark); color: white; margin-left: auto; }
+
+        /* TABLE STYLING */
+        .report-section { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.03); }
+        
+        .stat-summary { display: flex; gap: 20px; margin-bottom: 25px; }
+        .stat-pill { 
+            flex: 1; background: white; padding: 20px; border-radius: 14px; 
+            border: 1px solid #f1f5f9; box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            display: flex; flex-direction: column;
+        }
+        .stat-pill .value { font-size: 1.8rem; font-weight: 800; color: var(--dark); }
+        .stat-pill .label { font-size: 12px; font-weight: 600; color: var(--slate); text-transform: uppercase; }
+
+        .mb-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+        .mb-table th { text-align: left; padding: 15px; color: var(--slate); font-size: 12px; text-transform: uppercase; font-weight: 700; }
+        .mb-table tr { background: white; transition: 0.2s; }
+        .mb-table td { padding: 15px; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; font-size: 15px; }
+        .mb-table td:first-child { border-left: 1px solid #f1f5f9; border-radius: 10px 0 0 10px; }
+        .mb-table td:last-child { border-right: 1px solid #f1f5f9; border-radius: 0 10px 10px 0; }
+        .mb-table tr:hover { background: #fcfdff; transform: scale(1.002); }
+
+        /* INTERACTIVE BUTTONS IN TABLE */
+        .quick-actions { display: flex; align-items: center; gap: 8px; }
+        .qty-btn { 
+            width: 28px; height: 28px; border-radius: 6px; border: 1px solid #cbd5e1;
+            background: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .qty-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .stock-bar-bg { width: 100px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+        .stock-bar-fill { height: 100%; transition: 0.5s ease; }
+
+        @media print {
+            .navbar, .admin-top-bar, .no-print, .qty-btn { display: none !important; }
+            .container { max-width: 100%; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar no-print">
+    <div class="nav-logo">SHAGOR Meat Track</div>
+    <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="production-log.html">Production LOG</a></li>
+        <li><a href="meatball-manager.html" style="color:white; font-weight:bold;">Meatballs</a></li>
+        <li><a href="reports.html">Reports</a></li>
+    </ul>
+</nav>
+
+<div class="container">
+    
+    <div class="admin-top-bar no-print">
+        <div class="control-group">
+            <div class="input-box"><label>Batch ID</label><input type="text" id="newBatchID" placeholder="B-123"></div>
+            <div class="input-box"><label>Mince (kg)</label><input type="number" id="newMince" step="0.1" placeholder="0.0"></div>
+            <div class="input-box"><label>Total Pcs</label><input type="number" id="newQty" placeholder="0"></div>
+            <div class="input-box"><label>Date Made</label><input type="date" id="newDate"></div>
+            <button class="btn btn-add" onclick="createNewBatch()"><span class="material-icons">add_box</span> Create Batch</button>
+        </div>
+
+        <div class="control-group" style="border-top: 3px solid var(--success);">
+            <div class="input-box"><label>Select Batch</label><select id="updateBatchSelect"></select></div>
+            <div class="input-box"><label>Add Usage</label><input type="number" id="updateUsedQty" placeholder="Qty"></div>
+            <button class="btn btn-update" onclick="updateExistingBatch()"><span class="material-icons">check_circle</span> Update</button>
+        </div>
+
+        <div class="control-group">
+            <div class="input-box"><label>View From</label><input type="date" id="filterFrom" onchange="refreshUI()"></div>
+            <div class="input-box"><label>View To</label><input type="date" id="filterTo" onchange="refreshUI()"></div>
+        </div>
+
+        <button class="btn btn-print" onclick="window.print()"><span class="material-icons">print</span> Print</button>
+    </div>
+
+    <div class="report-section">
+        <div class="stat-summary">
+            <div class="stat-pill"><span class="label">Mince Processed</span><span class="value" id="statMince">0.0 kg</span></div>
+            <div class="stat-pill" style="border-left-color: var(--danger);"><span class="label">Weekly Used</span><span class="value" id="statUsed" style="color:var(--danger);">0 pcs</span></div>
+            <div class="stat-pill" style="border-left-color: var(--success);"><span class="label">Available Stock</span><span class="value" id="statLeft" style="color:var(--success);">0 pcs</span></div>
+        </div>
+
+        <table class="mb-table">
+            <thead>
+                <tr>
+                    <th>Batch Info</th>
+                    <th>Production</th>
+                    <th>Total Made</th>
+                    <th>Used Today</th>
+                    <th>Stock Health</th>
+                    <th>Last Usage</th>
+                    <th class="no-print">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function setDefaultDates() {
+        const today = new Date();
+        const lastWeek = new Date(); lastWeek.setDate(today.getDate() - 7);
+        document.getElementById('filterTo').value = today.toISOString().split('T')[0];
+        document.getElementById('filterFrom').value = lastWeek.toISOString().split('T')[0];
+        document.getElementById('newDate').value = today.toISOString().split('T')[0];
+    }
+
+    function createNewBatch() {
+        const batchID = document.getElementById('newBatchID').value;
+        const date = document.getElementById('newDate').value;
+        const mince = document.getElementById('newMince').value;
+        const qty = document.getElementById('newQty').value;
+        if(!batchID || !qty) return alert("Missing Batch ID or Quantity.");
+
+        let data = JSON.parse(localStorage.getItem("shagor_mb_interactive")) || [];
+        data.push({ id: Date.now(), batch: batchID, date, mince: parseFloat(mince) || 0, total: parseInt(qty), used: 0, usageDate: "" });
+        localStorage.setItem("shagor_mb_interactive", JSON.stringify(data));
+        refreshUI();
+        document.getElementById('newBatchID').value = '';
+    }
+
+    function updateExistingBatch() {
+        const id = document.getElementById('updateBatchSelect').value;
+        const usedAmount = document.getElementById('updateUsedQty').value;
+        if(!id || !usedAmount) return alert("Select batch and enter quantity.");
+        
+        applyUsage(id, parseInt(usedAmount));
+        document.getElementById('updateUsedQty').value = '';
+    }
+
+    function applyUsage(id, amountChange) {
+        let data = JSON.parse(localStorage.getItem("shagor_mb_interactive"));
+        const idx = data.findIndex(item => item.id == id);
+        if(idx !== -1) {
+            data[idx].used = Math.max(0, data[idx].used + amountChange);
+            data[idx].usageDate = new Date().toISOString().split('T')[0];
+            localStorage.setItem("shagor_mb_interactive", JSON.stringify(data));
+            refreshUI();
+        }
+    }
+
+    function refreshUI() {
+        const data = JSON.parse(localStorage.getItem("shagor_mb_interactive")) || [];
+        const fromDate = document.getElementById('filterFrom').value;
+        const toDate = document.getElementById('filterTo').value;
+        const tbody = document.getElementById('tableBody');
+        const select = document.getElementById('updateBatchSelect');
+        
+        tbody.innerHTML = "";
+        select.innerHTML = '<option value="">-- Select Batch --</option>';
+
+        let tm = 0, tu = 0, tl = 0;
+
+        data.forEach(item => {
+            const compareDate = item.usageDate || item.date;
+            if (fromDate && compareDate < fromDate) return;
+            if (toDate && compareDate > toDate) return;
+
+            const left = item.total - item.used;
+            const percent = (left / item.total) * 100;
+            const barColor = percent < 20 ? 'var(--danger)' : (percent < 50 ? '#f59e0b' : 'var(--success)');
+            
+            tm += item.mince; tu += item.used; tl += left;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong style="color:var(--dark)">${item.batch}</strong></td>
+                    <td><span style="font-size:12px; color:var(--slate)">${item.date}</span><br>${item.mince} kg</td>
+                    <td style="font-weight:700">${item.total}</td>
+                    <td class="no-print">
+                        <div class="quick-actions">
+                            <button class="qty-btn" onclick="applyUsage(${item.id}, -1)">-</button>
+                            <strong>${item.used}</strong>
+                            <button class="qty-btn" onclick="applyUsage(${item.id}, 1)">+</button>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight:700; color:${barColor}">${left} left</div>
+                        <div class="stock-bar-bg"><div class="stock-bar-fill" style="width:${percent}%; background:${barColor}"></div></div>
+                    </td>
+                    <td style="color:var(--primary); font-weight:700">${item.usageDate || '-'}</td>
+                    <td class="no-print">
+                        <button onclick="deleteRow(${item.id})" style="border:none; background:none; color:#cbd5e1; cursor:pointer"><span class="material-icons">delete</span></button>
+                    </td>
+                </tr>
+            `;
+
+            if(left > 0) {
+                const opt = document.createElement('option');
+                opt.value = item.id;
+                opt.text = `${item.batch} (${left} left)`;
+                select.add(opt);
+            }
+        });
+
+        document.getElementById('statMince').innerText = tm.toFixed(1) + " kg";
+        document.getElementById('statUsed').innerText = tu + " pcs";
+        document.getElementById('statLeft').innerText = tl + " pcs";
+    }
+
+    function deleteRow(id) {
+        if(confirm("Permanently delete this batch?")) {
+            let data = JSON.parse(localStorage.getItem("shagor_mb_interactive"));
+            data = data.filter(i => i.id != id);
+            localStorage.setItem("shagor_mb_interactive", JSON.stringify(data));
+            refreshUI();
+        }
+    }
+
+    window.onload = () => { setDefaultDates(); refreshUI(); };
+</script>
+</body>
+</html>
