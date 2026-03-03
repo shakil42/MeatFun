@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weekly Usage Reports - SHAGOR</title>
+    <title>Product Analysis Report - SHAGOR</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
@@ -11,6 +11,7 @@
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
         .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; border-top: 5px solid #10b981; }
         .stat-card .value { font-size: 1.8rem; font-weight: bold; color: #0f172a; }
+        .stat-card .label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; display: block; }
         
         .report-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 40px; }
         .report-table th { background: #f8fafc; padding: 15px; text-align: left; border-bottom: 2px solid #e2e8f0; color: #475569; font-size: 13px; }
@@ -18,23 +19,17 @@
         
         .filter-bar { background: white; padding: 20px; border-radius: 12px; display: flex; gap: 15px; align-items: flex-end; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .filter-group { display: flex; flex-direction: column; gap: 5px; flex: 1; }
-        .filter-group input, .filter-group select { padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; }
+        .filter-group label { font-size: 11px; font-weight: bold; color: #6366f1; text-transform: uppercase; }
+        .filter-group input, .filter-group select { padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fcfdff; }
 
         .btn-group { display: flex; gap: 10px; }
         .btn-print { background: #6366f1; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
-        .btn-save { background: #10b981; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
         
-        .report-footer { margin-top: 50px; padding-top: 20px; border-top: 1px dashed #cbd5e1; display: flex; justify-content: center; }
-        .btn-clear { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; padding: 8px 16px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px; font-size: 13px; transition: all 0.2s; }
-        .btn-clear:hover { background: #ef4444; color: white; }
-
-        /* Styling for the new comment column */
-        .col-comment { font-style: italic; color: #64748b; font-size: 13px !important; }
+        .col-comment { font-style: italic; color: #64748b; font-size: 12px !important; }
 
         @media print {
             .navbar, .filter-bar, .btn-group, .report-footer, .no-print { display: none !important; }
             .report-container { padding: 0; }
-            .stat-card { border: 1px solid #ddd; box-shadow: none; }
         }
     </style>
 </head>
@@ -52,76 +47,107 @@
     <div class="report-container">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <div>
-                <h1>Usage Report</h1>
+                <h1>Stock Analysis</h1>
                 <p id="printDateRange" style="color: #64748b; font-size: 14px;"></p>
             </div>
             <div class="btn-group no-print">
-                <button class="btn-save" onclick="exportReportCSV()">
-                    <span class="material-icons">download</span> Save CSV
-                </button>
                 <button class="btn-print" onclick="window.print()">
-                    <span class="material-icons">print</span> Print PDF
+                    <span class="material-icons">print</span> Print Report
                 </button>
             </div>
         </div>
         
         <div class="filter-bar no-print">
             <div class="filter-group">
-                <label>From Date</label>
+                <label>Date From</label>
                 <input type="date" id="dateFrom" onchange="loadReportData()">
             </div>
             <div class="filter-group">
-                <label>To Date</label>
+                <label>Date To</label>
                 <input type="date" id="dateTo" onchange="loadReportData()">
             </div>
             <div class="filter-group">
                 <label>Category</label>
-                <select id="filterCat" onchange="loadReportData()">
+                <select id="filterCat" onchange="handleCategoryChange()">
                     <option value="All">All Categories</option>
                     <option value="Chicken">Chicken</option>
                     <option value="Beef">Beef</option>
                 </select>
             </div>
+            <div class="filter-group">
+                <label>Product Item</label>
+                <select id="filterProd" onchange="loadReportData()" disabled>
+                    <option value="All">All Items</option>
+                </select>
+            </div>
         </div>
 
         <div class="stats-grid">
-            <div class="stat-card"><h3>Produced</h3><div class="value" id="statCooked">0 kg</div></div>
-            <div class="stat-card" style="border-top-color: #ef4444;"><h3>Total Used</h3><div class="value" id="statUsed" style="color:#ef4444;">0 kg</div></div>
-            <div class="stat-card" style="border-top-color: #3b82f6;"><h3>Current Net</h3><div class="value" id="statNet" style="color:#3b82f6;">0 kg</div></div>
+            <div class="stat-card">
+                <div class="value" id="statCooked">0.00</div>
+                <span class="label">Total Produced (kg)</span>
+            </div>
+            <div class="stat-card" style="border-top-color: #ef4444;">
+                <div class="value" id="statUsed" style="color:#ef4444;">0.00</div>
+                <span class="label">Total Sliced (kg)</span>
+            </div>
+            <div class="stat-card" style="border-top-color: #3b82f6;">
+                <div class="value" id="statNet" style="color:#3b82f6;">0.00</div>
+                <span class="label">Available Balance (kg)</span>
+            </div>
         </div>
 
-        <table class="report-table" id="reportTable">
+        <table class="report-table">
             <thead>
                 <tr>
                     <th>Prod. Date</th>
-                    <th>Usage Date</th>
                     <th>Batch</th>
                     <th>Product</th>
                     <th>Cooked</th>
                     <th>Used</th>
                     <th>Balance</th>
-                    <th>Comments</th> </tr>
+                    <th>Comment</th>
+                </tr>
             </thead>
             <tbody id="reportItems"></tbody>
         </table>
-
-        <div class="report-footer no-print">
-            <button class="btn-clear" onclick="handleClearAll()">
-                <span class="material-icons">delete_forever</span>
-                Clear All Database Records
-            </button>
-        </div>
     </div>
 
     <script>
+        const productMap = {
+            "Chicken": ["Burrito", "Drumstick", "Breast"],
+            "Beef": ["Beef Strip", "Beef Eye Round"]
+        };
+
+        function handleCategoryChange() {
+            const cat = document.getElementById('filterCat').value;
+            const prodDropdown = document.getElementById('filterProd');
+            
+            // Reset and populate Product dropdown
+            prodDropdown.innerHTML = '<option value="All">All Items</option>';
+            
+            if (cat !== "All" && productMap[cat]) {
+                prodDropdown.disabled = false;
+                productMap[cat].forEach(item => {
+                    let opt = document.createElement("option");
+                    opt.value = item; opt.innerText = item;
+                    prodDropdown.appendChild(opt);
+                });
+            } else {
+                prodDropdown.disabled = true;
+            }
+            loadReportData();
+        }
+
         function loadReportData() {
-            const data = JSON.parse(localStorage.getItem("shagor_meat_reports")) || { "Chicken": [], "Beef": [], "Rice": [] };
+            const data = JSON.parse(localStorage.getItem("shagor_meat_reports")) || { "Chicken": [], "Beef": [] };
             const fromDate = document.getElementById('dateFrom').value;
             const toDate = document.getElementById('dateTo').value;
             const selectedCat = document.getElementById('filterCat').value;
+            const selectedProd = document.getElementById('filterProd').value;
             const tbody = document.getElementById('reportItems');
             
-            document.getElementById('printDateRange').innerText = `Period: ${fromDate || 'Start'} to ${toDate || 'End'}`;
+            document.getElementById('printDateRange').innerText = `Filtering: ${selectedCat} > ${selectedProd}`;
 
             tbody.innerHTML = "";
             let totalProduced = 0;
@@ -130,14 +156,17 @@
             Object.keys(data).forEach(cat => {
                 if (selectedCat === "All" || selectedCat === cat) {
                     data[cat].forEach((entry) => {
-                        const compareDate = entry.usageDate || entry.date;
+                        // Filter by Product
+                        if (selectedProd !== "All" && entry.product !== selectedProd) return;
+
+                        // Filter by Date
+                        const compareDate = entry.date;
                         if (fromDate && compareDate < fromDate) return;
                         if (toDate && compareDate > toDate) return;
 
                         const cooked = parseFloat(entry.cooked) || 0;
                         const used = parseFloat(entry.openBag) || 0;
                         const balance = cooked - used;
-                        const commentText = entry.comment || ""; // Fetch comment data
 
                         totalProduced += cooked;
                         totalUsed += used;
@@ -145,59 +174,31 @@
                         tbody.innerHTML += `
                             <tr>
                                 <td>${entry.date}</td>
-                                <td style="color:#3b82f6; font-weight:bold;">${entry.usageDate || '-'}</td>
-                                <td>${entry.batch}</td>
+                                <td><strong>${entry.batch}</strong></td>
                                 <td>${entry.product}</td>
                                 <td style="color:green">+${cooked.toFixed(2)}</td>
                                 <td style="color:red">-${used.toFixed(2)}</td>
-                                <td>${balance.toFixed(2)} kg</td>
-                                <td class="col-comment">${commentText}</td>
+                                <td style="font-weight:bold">${balance.toFixed(2)} kg</td>
+                                <td class="col-comment">${entry.comment || '-'}</td>
                             </tr>
                         `;
                     });
                 }
             });
 
-            document.getElementById('statCooked').innerText = totalProduced.toFixed(1) + " kg";
-            document.getElementById('statUsed').innerText = totalUsed.toFixed(1) + " kg";
-            document.getElementById('statNet').innerText = (totalProduced - totalUsed).toFixed(1) + " kg";
-        }
-
-        function exportReportCSV() {
-            // Updated CSV header
-            let csv = "Prod Date,Usage Date,Batch,Product,Cooked,Used,Balance,Comments\n";
-            const rows = document.querySelectorAll("#reportItems tr");
-            rows.forEach(row => {
-                const cols = row.querySelectorAll("td");
-                const rowData = Array.from(cols).map(c => {
-                    // Clean the text and handle commas for CSV safety
-                    let text = c.innerText.replace("kg", "").trim();
-                    return `"${text.replace(/"/g, '""')}"`;
-                });
-                csv += rowData.join(",") + "\n";
-            });
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.setAttribute('href', url);
-            a.setAttribute('download', `Usage_Report_${new Date().toISOString().split('T')[0]}.csv`);
-            a.click();
+            // Update Stats with the filtered totals
+            document.getElementById('statCooked').innerText = totalProduced.toFixed(2);
+            document.getElementById('statUsed').innerText = totalUsed.toFixed(2);
+            document.getElementById('statNet').innerText = (totalProduced - totalUsed).toFixed(2);
         }
 
         window.onload = () => {
             const now = new Date();
-            const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
             document.getElementById('dateTo').value = now.toISOString().split('T')[0];
-            document.getElementById('dateFrom').value = lastWeek.toISOString().split('T')[0];
+            document.getElementById('dateFrom').value = lastMonth.toISOString().split('T')[0];
             loadReportData();
         };
-
-        function handleClearAll() {
-            if(confirm("DANGER: This will permanently delete ALL records. Continue?")) {
-                localStorage.removeItem("shagor_meat_reports");
-                loadReportData();
-            }
-        }
     </script>
 </body>
 </html>
